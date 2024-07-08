@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 export const orderApi = createApi({
   reducerPath: 'orderApi',
   baseQuery: fetchBaseQuery({
-        baseUrl: 'https://elisishop.onrender.com/api/v1',
+    baseUrl: 'https://elisishop.onrender.com/api/v1',
     credentials: 'include',
   }),
 
@@ -30,14 +30,23 @@ export const orderApi = createApi({
       providesTags: ['MyOrder'],
     }),
 
+    // shopierCheckoutSession: builder.mutation({
+    //   query(body) {
+    //     return {
+    //       url: '/payment/checkout_session',
+    //       method: 'POST',
+    //       body,
+    //     }
+    //   },
+    // }),
+
     shopierCheckoutSession: builder.mutation({
-      query(body) {
-        return {
-          url: '/payment/checkout_session',
-          method: 'POST',
-          body,
-        }
-      },
+      query: (orderData) => ({
+        url: '/payment/checkout_session',
+        method: 'POST',
+        body: orderData,
+        responseHandler: 'text', // Response'u text olarak işle
+      }),
     }),
     getDashboardSales: builder.query({
       query: ({ startDate, endDate }) =>
@@ -50,7 +59,6 @@ export const orderApi = createApi({
 
     updateOrder: builder.mutation({
       query({ id, body }) {
-     
         return {
           url: `/admin/orders/${id}`,
           method: 'PUT',
@@ -73,7 +81,6 @@ export const orderApi = createApi({
 
     deleteOrder: builder.mutation({
       query({ body, id }) {
-      
         return {
           url: `/admin/orders/${id}`,
           method: 'DELETE',

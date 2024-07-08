@@ -5,7 +5,7 @@ import CheckoutSteps from './CheckoutSteps';
 import { calculateOrderCost } from '../../helpers/helpers';
 import {
   useCreateNewOrderMutation,
-  useShopierCheckoutSessionMutation, // useShopierCheckoutSessionMutation olarak değiştirdim
+  useShopierCheckoutSessionMutation,
 } from '../../redux/api/orderApi';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -19,7 +19,6 @@ const PaymentMethod = () => {
   const [errorProductStock, setErrorProductStock] = useState([]);
 
   const dispatch = useDispatch();
-
   const navigate = useNavigate();
 
   const { shippingInfo, shippingInvoiceInfo, cartItems } = useSelector(
@@ -31,30 +30,37 @@ const PaymentMethod = () => {
   const [
     shopierCheckoutSession,
     { data: checkoutData, error: checkoutError, isLoading },
-  ] = useShopierCheckoutSessionMutation(); // shopierCheckoutSession olarak değiştirdim
+  ] = useShopierCheckoutSessionMutation();
 
   useEffect(() => {
+    console.log('checkoutData', checkoutData);
+    console.log('checkoutError', checkoutError);
+
     if (checkoutData) {
+      // Create a new window or tab to open the form
       const newWindow = window.open('', '_blank');
-      newWindow.document.open();
-      newWindow.document.write(checkoutData);
-      newWindow.document.close();
+      if (newWindow) {
+        newWindow.document.open();
+        newWindow.document.write(checkoutData);
+        newWindow.document.close();
+
+        // Submit the form automatically
+        const form = newWindow.document.querySelector('form');
+        if (form) {
+          form.submit();
+        }
+      }
     }
 
     if (checkoutError) {
       toast.error(checkoutError?.data?.message);
-    }
-
-    if (checkoutError) {
       const errorData = checkoutError?.data;
       if (errorData && Array.isArray(errorData.errors)) {
         setErrorProductStock(errorData.errors);
-
         errorData.errors.forEach((err) => {
           const toastMessage = err.msg;
           toast.error(toastMessage);
         });
-
         toast.error('Sepetinizi Kontrol Ediniz.');
       } else {
         toast.error('Bilinmeyen bir hata oluştu.');
@@ -67,12 +73,10 @@ const PaymentMethod = () => {
       const errorData = error?.data;
       if (errorData && Array.isArray(errorData.errors)) {
         setErrorProductStock(errorData.errors);
-
         errorData.errors.forEach((err) => {
           const toastMessage = err.msg;
           toast.error(toastMessage);
         });
-
         toast.error('Sepetinizi Güncelleyin');
       } else {
         toast.error('Bilinmeyen bir hata oluştu.');
@@ -80,7 +84,7 @@ const PaymentMethod = () => {
     }
 
     if (isSuccess) {
-      toast.success('Sipariş Oluşturuldu.'); // kapıda ödeme
+      toast.success('Sipariş Oluşturuldu.');
       dispatch(clearCart());
       navigate('/me/orders');
     }
@@ -99,37 +103,33 @@ const PaymentMethod = () => {
     const { itemsPrice, shippingPrice, totalPrice } = calculateOrderCost(cartItems);
 
     if (method === 'COD') {
-      // Create COD Order
       const orderData = {
         shippingInfo,
         shippingInvoiceInfo,
         orderItems: cartItems,
         itemsPrice,
         shippingAmount: shippingPrice,
-        taxAmount: 0, // backendde hesaplanacak
+        taxAmount: 0,
         totalAmount: totalPrice,
         paymentInfo: {
           status: 'Not Paid',
         },
         paymentMethod: 'COD',
       };
-
       createNewOrder(orderData);
     }
 
     if (method === 'Card') {
-      // Shopier Checkout
       const orderData = {
         shippingInfo,
         shippingInvoiceInfo,
         orderItems: cartItems,
         itemsPrice,
         shippingAmount: shippingPrice,
-        taxAmount: 0, // backendde hesaplanacak
+        taxAmount: 0,
         totalAmount: totalPrice,
       };
-
-      shopierCheckoutSession(orderData); // shopierCheckoutSession olarak değiştirdim
+      shopierCheckoutSession(orderData);
     }
   };
 
@@ -137,15 +137,13 @@ const PaymentMethod = () => {
     <main className='align-page min-h-screen'>
       <MetaData title={'Ödeme Metodu'} />
       <CheckoutSteps shipping confirmOrder payment />
-
-      <div className='flex justify-center mt-5 '>
-        <div className=' mt-5'>
+      <div className='flex justify-center mt-5'>
+        <div className='mt-5'>
           <form
-            className='flex flex-col shadow-md rounded-md p-4 gap-y-4 '
+            className='flex flex-col shadow-md rounded-md p-4 gap-y-4'
             onSubmit={submitHandler}
           >
             <h2 className='mb-4 font-bold'>Ödeme Metodu Seçiniz</h2>
-
             <div className='flex gap-x-2'>
               <input
                 className='form-check-input'
@@ -172,7 +170,6 @@ const PaymentMethod = () => {
                 Kredi Kartı - VISA, MasterCard
               </label>
             </div>
-
             <button
               id='shipping_btn'
               type='submit'
@@ -189,10 +186,6 @@ const PaymentMethod = () => {
 };
 
 export default PaymentMethod;
-
-
-
-
 
 
 
